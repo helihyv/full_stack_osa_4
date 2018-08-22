@@ -9,7 +9,24 @@ const totalLikes = (blogs) => {
 
 }
 
+const favoriteBlog = (blogs) => {
+  if (blogs.length === 0) {
+    return null
+  }
+
+  const favorite = blogs.reduce((favoriteBlog, blog) => {
+    return blog.likes > favoriteBlog.likes ? blog : favoriteBlog
+  })// Ei alkuarvoa annettu, käyttää taulukon ensimmäistä alkuarvona
+
+  return {
+    title: favorite.title,
+    author: favorite.author,
+    likes: favorite.likes
+  }
+}
+
 module.exports = {
   dummy,
-  totalLikes
+  totalLikes,
+  favoriteBlog
 }
