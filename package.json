@@ -1,0 +1,32 @@
+{
+  "name": "blogilista",
+  "version": "0.0.1",
+  "description": "My answers to the exercises of the part four of the Full Stack Open course",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "watch": "nodemon index.js",
+    "lint": "eslint .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/helihyv/full_stack_osa_4.git"
+  },
+  "author": "Heli Hyvättinen",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/helihyv/full_stack_osa_4/issues"
+  },
+  "homepage": "https://github.com/helihyv/full_stack_osa_4#readme",
+  "dependencies": {
+    "cors": "^2.8.4",
+    "dotenv": "^6.0.0",
+    "express": "^4.16.3",
+    "mongoose": "^5.2.9"
+  },
+  "devDependencies": {
+    "eslint": "^5.4.0",
+    "nodemon": "^1.18.3"
+  }
+}
