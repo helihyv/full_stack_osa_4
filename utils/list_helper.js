@@ -25,8 +25,35 @@ const favoriteBlog = (blogs) => {
   }
 }
 
+const mostBlogs = (blogs) => {
+  if (blogs.length === 0)
+    return null
+
+  const authors = blogs.reduce((authors, blog) => {
+    const indexOfAuthor = authors.findIndex((author) => {
+      return author.author === blog.author
+    })
+    if (indexOfAuthor === -1) { //Ei löytynyt
+      authors.push({
+        author: blog.author,
+        blogs: 1
+      })
+    }
+    else {
+      authors[indexOfAuthor].blogs += 1
+    }
+    return authors
+  },[])
+
+return authors.reduce((authorWithMostBlogs, author) => {
+    return author.blogs > authorWithMostBlogs.blogs ? author :authorWithMostBlogs
+  })  // Ei alkuarvoa annettu, käyttää taulukon ensimmäistä alkuarvona
+
+}
+
 module.exports = {
   dummy,
   totalLikes,
-  favoriteBlog
+  favoriteBlog,
+  mostBlogs
 }
