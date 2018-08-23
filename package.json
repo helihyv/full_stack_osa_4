@@ -4,10 +4,10 @@
   "description": "My answers to the exercises of the part four of the Full Stack Open course",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "watch": "nodemon index.js",
+    "start": "cross-env NODE_ENV=production node index.js",
+    "watch": "cross-env NODE_ENV=development nodemon index.js",
     "lint": "eslint .",
-    "test": "jest --verbose"
+    "test": "cross-env NODE_ENV=test jest --verbose"
   },
   "repository": {
     "type": "git",
@@ -26,9 +26,11 @@
     "mongoose": "^5.2.9"
   },
   "devDependencies": {
+    "cross-env": "^5.2.0",
     "eslint": "^5.4.0",
     "jest": "^23.5.0",
-    "nodemon": "^1.18.3"
+    "nodemon": "^1.18.3",
+    "supertest": "^3.1.0"
   },
   "jest": {
     "testEnvironment": "node"
