@@ -153,6 +153,33 @@ describe('POST /api/blogs', async () => {
 
     expect(blog.likes).toBe(0)
   })
+
+  test('if title is missing return 400', async () => {
+    const newBlog = {
+      author: 'Otso Kontio',
+      url: 'https://hunajablogi.fi',
+      likes: 2
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(400)
+  })
+
+  test('if url is missing return 400', async () => {
+    const newBlog = {
+      author: 'Otso Kontio',
+      title: 'Hunajablogi',
+      likes: 3
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(400)
+  })
+
 })
 
 
