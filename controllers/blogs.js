@@ -9,6 +9,7 @@ blogsRouter.get('/', async (request, response) => {
 blogsRouter.post('/', async (request, response) => {
 
   try {
+
     const body = request.body
 
     if (!body.title) {

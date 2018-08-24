@@ -3,97 +3,42 @@ const supertest = require('supertest')
 const { app, server } = require('../index')
 const api = supertest(app)
 const Blog = require('../models/blog')
+const helper = require('./testhelper')
 
-const initialBlogs = [
-  {
-    _id: "5a422a851b54a676234d17f7",
-    title: "React patterns",
-    author: "Michael Chan",
-    url: "https://reactpatterns.com/",
-    likes: 7,
-    __v: 0
-  },
-  {
-    _id: "5a422aa71b54a676234d17f8",
-    title: "Go To Statement Considered Harmful",
-    author: "Edsger W. Dijkstra",
-    url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-    likes: 5,
-    __v: 0
-  },
-  {
-    _id: "5a422b3a1b54a676234d17f9",
-    title: "Canonical string reduction",
-    author: "Edsger W. Dijkstra",
-    url: "http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html",
-    likes: 12,
-    __v: 0
-  },
-  {
-    _id: "5a422b891b54a676234d17fa",
-    title: "First class tests",
-    author: "Robert C. Martin",
-    url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
-    likes: 10,
-    __v: 0
-  },
-  {
-    _id: "5a422ba71b54a676234d17fb",
-    title: "TDD harms architecture",
-    author: "Robert C. Martin",
-    url: "http://blog.cleancoder.com/uncle-bob/2017/03/03/TDD-Harms-Architecture.html",
-    likes: 0,
-    __v: 0
-  },
-  {
-    _id: "5a422bc61b54a676234d17fc",
-    title: "Type wars",
-    author: "Robert C. Martin",
-    url: "http://blog.cleancoder.com/uncle-bob/2016/05/01/TypeWars.html",
-    likes: 2,
-    __v: 0
-  }
-]
 
-beforeAll(async () => {
-  await Blog.remove({})
 
-  const blogObjects = initialBlogs.map(blog => new Blog(blog))
-  const promiseArray = blogObjects.map(blog => blog.save())
-  await Promise.all(promiseArray)
-})
+describe('when there are initially some blogs saved', () => {
 
-describe('GET /api/blogs', () => {
+  beforeAll(async () => {
+    await Blog.remove({})
 
-  test('blogs are returned as json', async () => {
-    await api
+    const blogObjects = helper.initialBlogs.map(blog => new Blog(blog))
+    const promiseArray = blogObjects.map(blog => blog.save())
+    await Promise.all(promiseArray)
+  })
+
+  test('all blogs are returned as json by GET /api/blogs', async () => {
+    const blogsInDatabase = await helper.blogsInDb()
+
+    const response = await api
       .get('/api/blogs')
       .expect(200)
       .expect('Content-type', /application\/json/)
-  })
 
-  test('all blogs are returned', async () => {
-    const response = await api
-      .get('/api/blogs')
+    expect(response.body.length).toBe(blogsInDatabase.length)
 
-    expect(response.body.length).toBe(initialBlogs.length)
-
-  })
-
-
-  test('a specific blog is among the returned blogs', async () => {
-    const response = await api
-      .get('/api/blogs')
-
-    const titles = response.body.map(r => r.title)
-
-    expect(titles).toContain('Type wars')
+    const returnedTitles = response.body.map(r => r.title)
+    blogsInDatabase.forEach(blog => {
+      expect(returnedTitles).toContain(blog.title)
+    })
   })
 })
 
-describe('POST /api/blogs', async () => {
+describe('adding a blog', async () => {
 
-  test('a valid blog can be added ', async () => {
+  test('POST /api/notes succeeds with valid data', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+
     const newBlog = {
       title: 'Hunajablogi',
       author: 'Otso Kontio',
@@ -107,26 +52,26 @@ describe('POST /api/blogs', async () => {
       .expect(200)
       .expect('Content-type', /application\/json/)
 
-    const response = await api
-      .get('/api/blogs')
+    const blogsAfterOperation = await helper.blogsInDb()
 
-    const titles = response.body.map (r => r.title)
-    const authors = response.body.map(r => r.author)
-    const urls = response.body.map(r => r.url)
-    const likesList = response.body.map( r => r.likes)
+    const titles = blogsAfterOperation.map (r => r.title)
+    const authors = blogsAfterOperation.map(r => r.author)
+    const urls = blogsAfterOperation.map(r => r.url)
+    const likesList = blogsAfterOperation.map( r => r.likes)
 
-    expect(response.body.length).toBe(initialBlogs.length + 1)
+    expect(blogsAfterOperation.length).toBe(blogsAtStart.length + 1)
     expect(titles).toContain('Hunajablogi')
     expect(authors).toContain('Otso Kontio')
     expect(urls).toContain('https://hunajablogi.fi')
     expect(likesList).toContain(1000)
   })
 
-  test('if likes is missing it is set to 0', async () => {
+  test('if likes is missing (from POST /api/blogs) it is set to 0', async () => {
+
     const newBlog = {
-      title: 'Hujablogi',
-      author: 'Otso Kontio',
-      url: 'https://hunajablogi.fi'
+      title: 'Kalablogi',
+      author: 'Meri Kotka',
+      url: 'https://kalablogi.fi'
     }
 
     const response = await api
@@ -137,52 +82,50 @@ describe('POST /api/blogs', async () => {
 
     const id = response.body._id
 
-//Varmistetaan että on mennyt tietokantaankin oikein...
-//Yksittäisen hakua ei vielä toteutettu tätä tehtäessä joten
-//haetaan kaikki ja etsitään oikea
-
-    const response2 = await api
-      .get('/api/blogs/')
-      .expect(200)
-      .expect('Content-type', /application\/json/)
-
-
-    const blog  = response2.body.find((blog) => {
-      return blog._id === id
-    })
+    const blog = await helper.findBlogInDb(id)
 
     expect(blog.likes).toBe(0)
   })
 
-  test('if title is missing return 400', async () => {
+  test('if title is missing (from POST /api/blogs) fail and return 400', async () => {
     const newBlog = {
-      author: 'Otso Kontio',
-      url: 'https://hunajablogi.fi',
+      author: 'Meri Kotka',
+      url: 'https://kalablogi.fi',
       likes: 2
     }
 
+    const notesAtStart = await helper.blogsInDb()
+
     await api
       .post('/api/blogs')
       .send(newBlog)
       .expect(400)
+
+    const notesAfterOperation = await helper.blogsInDb()
+
+    expect(notesAfterOperation.length).toBe(notesAtStart.length)
   })
 
-  test('if url is missing return 400', async () => {
+
+  test('if url is missing (from POST /api/blogs) fail and return 400', async () => {
     const newBlog = {
-      author: 'Otso Kontio',
-      title: 'Hunajablogi',
+      author: 'Meri Kotka',
+      title: 'Kalablogi',
       likes: 3
     }
 
+    const notesAtStart = await helper.blogsInDb()
+
     await api
       .post('/api/blogs')
       .send(newBlog)
       .expect(400)
+
+    const notesAfterOperation = await helper.blogsInDb()
+    expect(notesAfterOperation.length).toBe(notesAtStart.length)
   })
 
 })
-
-
 
 afterAll(() => {
   server.close()
