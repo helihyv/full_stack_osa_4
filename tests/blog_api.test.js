@@ -121,7 +121,41 @@ describe('POST /api/blogs', async () => {
     expect(urls).toContain('https://hunajablogi.fi')
     expect(likesList).toContain(1000)
   })
+
+  test('if likes is missing it is set to 0', async () => {
+    const newBlog = {
+      title: 'Hujablogi',
+      author: 'Otso Kontio',
+      url: 'https://hunajablogi.fi'
+    }
+
+    const response = await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(200)
+      .expect('Content-type', /application\/json/)
+
+    const id = response.body._id
+
+//Varmistetaan että on mennyt tietokantaankin oikein...
+//Yksittäisen hakua ei vielä toteutettu tätä tehtäessä joten
+//haetaan kaikki ja etsitään oikea
+
+    const response2 = await api
+      .get('/api/blogs/')
+      .expect(200)
+      .expect('Content-type', /application\/json/)
+
+
+    const blog  = response2.body.find((blog) => {
+      return blog._id === id
+    })
+
+    expect(blog.likes).toBe(0)
+  })
 })
+
+
 
 afterAll(() => {
   server.close()
