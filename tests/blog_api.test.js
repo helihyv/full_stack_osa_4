@@ -91,6 +91,37 @@ describe('GET /api/blogs', () => {
   })
 })
 
+describe('POST /api/blogs', async () => {
+
+  test('a valid blog can be added ', async () => {
+    const newBlog = {
+      title: 'Hunajablogi',
+      author: 'Otso Kontio',
+      url: 'https://hunajablogi.fi',
+      likes: 1000
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(200)
+      .expect('Content-type', /application\/json/)
+
+    const response = await api
+      .get('/api/blogs')
+
+    const titles = response.body.map (r => r.title)
+    const authors = response.body.map(r => r.author)
+    const urls = response.body.map(r => r.url)
+    const likesList = response.body.map( r => r.likes)
+
+    expect(response.body.length).toBe(initialBlogs.length + 1)
+    expect(titles).toContain('Hunajablogi')
+    expect(authors).toContain('Otso Kontio')
+    expect(urls).toContain('https://hunajablogi.fi')
+    expect(likesList).toContain(1000)
+  })
+})
 
 afterAll(() => {
   server.close()
