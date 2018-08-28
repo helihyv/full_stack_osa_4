@@ -17,7 +17,7 @@ app.use('/api/users', usersRouter)
 
 const mongoUrl = config.mongoUrl
 
-mongoose.connect(mongoUrl)
+mongoose.connect(mongoUrl, { useNewUrlParser: true })
   .then( () => {
     console.log('connected to database', config.mongoUrl)
   })

@@ -1,9 +1,12 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 blogsRouter.get('/', async (request, response) => {
-  const blogs = await Blog.find({})
-  response.json(blogs)
+  const blogs = await Blog
+    .find({})
+    .populate('user', { username: 1, name: 1 })
+  response.json(blogs.map(blog => Blog.format(blog)))
 })
 
 blogsRouter.post('/', async (request, response) => {
@@ -20,16 +23,23 @@ blogsRouter.post('/', async (request, response) => {
       return response.status(400).json({ error: 'url missing'})
     }
 
+    const user = await User.findOne()
 
+    
     const blog = new Blog({
       title: body.title,
       author: body.author,
       url: body.url,
-      likes: body.likes || 0
+      likes: body.likes || 0,
+      user: user._id
     })
-
+   
     const savedBlog = await blog.save()
-    response.json(savedBlog)
+
+    user.blogs = user.blogs.concat(savedBlog._id)
+    await user.save()
+
+    response.json(Blog.format(savedBlog))
   } catch (expection) {
     console.log(expection)
     response.status(500).json( { error : 'something went wrong...' })
@@ -80,7 +90,7 @@ blogsRouter.put('/:id', async (request, response) => { //päivittää pyynnöss�
       response.status(400).send( { error: 'no blog with this id exists'})   
     }    
    
-    response.json(changedBlog)
+    response.json(Blog.format(changedBlog))
     
 
 
