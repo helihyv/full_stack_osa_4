@@ -156,6 +156,62 @@ describe('deleting a blog', async () => {
   })
 })
 
+describe('updating a blog', async () => {
+
+  let addedBlog
+
+  beforeAll(async () => {
+    addedBlog = new Blog({
+      title: 'Rehublogi',
+      author: 'Mansikki Ammuton',
+      url: 'https://rehublogi.fi',
+      likes: 5
+    })
+
+    await addedBlog.save()
+
+  })
+
+  test('PUT /api/blogs/:id succeeds with proper statuscode', async () => {
+    const changedBlog = new Blog({
+      title: 'heinäblogi',
+      author: 'Mansikki Ammu',
+      url: 'https://heinäblogi.fi',
+      likes: 15
+    })
+
+    await api
+      .put(`/api/blogs/${addedBlog._id}`)
+      .send(changedBlog)
+      .expect(200)
+  
+   const changedBlogFromDb = await helper.findBlogInDb(addedBlog._id)
+   
+   expect(changedBlogFromDb.title).toEqual(changedBlog.title)
+   expect(changedBlogFromDb.author).toEqual(changedBlog.author)
+   expect(changedBlogFromDb.url).toEqual(changedBlog.url)
+   expect(changedBlogFromDb.likes).toEqual(changedBlog.likes)
+  })
+
+  test('PUT /api/blogs/:id succeeds when given only the likes field', async () => {
+    const justLikesBlog = ({
+      likes: 300
+    })
+
+    await api
+      .put(`/api/blogs/${addedBlog.id}`)
+      .send(justLikesBlog)
+      .expect(200)
+
+  const changedBlogFromDb = await helper.findBlogInDb(addedBlog._id)
+
+  expect(changedBlogFromDb.likes).toEqual(justLikesBlog.likes)
+  expect(changedBlogFromDb.title).toBeDefined()
+  expect(changedBlogFromDb.author).toBeDefined()
+  expect(changedBlogFromDb.url).toBeDefined()
+  })
+})
+
 afterAll(() => {
   server.close()
 })
