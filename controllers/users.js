@@ -6,14 +6,36 @@ usersRouter.post('/', async (request, response) => {
     try {
         const body = request.body
 
+        if (!body.username) {
+            return response.status(400).json({ error: 'username missing' })
+        }
+
+        const existingUser = await User.find({ username: body.username })
+        if (existingUser.length > 0) {
+            return response.status(400).json({ error: 'username must be unique' })
+        }
+
+        if (!body.password) {
+            return response.status(400).json({ error: 'password missing' })
+        }
+
+        if (body.password.length < 3) {
+            return response.status(400).json({ error: 'password must be at least three characters long' })
+        }
+
+
         const saltRounds = 10
         const passwordHash = await bcrypt.hash(body.password, saltRounds)
 
+        const adult = body.adult === undefined ? true : body.adult
+        
+        const name = body.name ? body.name : '' //jos nimikenttää ei ole käytetään oletuksena tyhjää merkkijonoa
+
         const user = new User({
             username: body.username,
-            name: body.name,
+            name,
             passwordHash,
-            adult: body.adult
+            adult
         })
 
         const savedUser = await user.save()
