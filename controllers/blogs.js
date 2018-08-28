@@ -48,4 +48,46 @@ blogsRouter.delete('/:id', async (request, response) => {
   }
 })
 
+blogsRouter.put('/:id', async (request, response) => { //päivittää pyynnössä tulleet kentät ja jättää muut ennalleen
+                                                      //mahdolliset ylimääräiset kentät ohitetaan hiljaisesti
+                                                      
+  try {
+
+    const changesInBlog = {}
+
+    const body = request.body
+    
+    if (body.title) {
+      changesInBlog.title = body.title
+    }
+    if (body.author) {
+      changesInBlog.author = body.author
+    }
+
+    if (body.url) {
+      changesInBlog.url = body.url
+    }
+
+    if (body.likes) {
+      changesInBlog.likes = body.likes
+    }
+    
+    console.log (changesInBlog)
+
+    const changedBlog = await Blog.findByIdAndUpdate(request.params.id, changesInBlog, { new: true })
+
+    if(!changedBlog) { //id:llä ei löytynyt blogia
+      response.status(400).send( { error: 'no blog with this id exists'})   
+    }    
+   
+    response.json(changedBlog)
+    
+
+
+  } catch (exception) {
+    console.log(exception)
+    response.status(400).send( { error: 'malformatted id' })
+  }
+})
+
 module.exports = blogsRouter
