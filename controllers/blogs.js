@@ -62,13 +62,37 @@ blogsRouter.post('/', async (request, response) => {
 
 blogsRouter.delete('/:id', async (request, response) => {
   try {
-   
-    await Blog.findByIdAndRemove(request.params.id)
+
+    const token = request.token
+
+    const decodedToken = jwt.verify(token, process.env.SECRET)
+
+    if (!token || !decodedToken.id) {
+      return response.status(401).json({error: 'token missing or invalid' })
+    }
+
+      
+    const blogToBeDeleted = await Blog.findById(request.params.id)
+
+    if (!blogToBeDeleted){ //poistettavaa blogia ei löytynyt
+      //oletetaan että blogi oli jo poistettu ja toimitaan kuin poisto ollsi onnistunut
+      return response.status(204).end() 
+    }
+    if (decodedToken.id.toString() !== blogToBeDeleted.user.toString()) {
+      return response.status(401).json({ error: 'cannot delete a blog that was created by another user'})
+    }
+
+    await blogToBeDeleted.remove()
+
       response.status(204).end()
 
     } catch (expection) {
+      if (expection.name === 'JsonWebTokenError') {
+        response.status(401).json({ error: expection.message })
+      } else {
       console.log(expection)
       response.status(400).send( { error: "malformatted id" })
+      }
   }
 })
 
